@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/date_formatter.dart';
@@ -16,8 +17,57 @@ class QrResultCard extends StatelessWidget {
     this.showSaveButton = false,
   });
 
+  // 콘텐츠 타입에 따라 실행할 URI 생성
+  String? _smartUri() {
+    final c = result.content.trim();
+    final lower = c.toLowerCase();
+    if (lower.startsWith('http://') || lower.startsWith('https://')) return c;
+    if (lower.startsWith('mailto:')) return c;
+    if (lower.startsWith('tel:')) return c;
+    if (lower.startsWith('phone:')) return c.replaceFirst(RegExp(r'^phone:', caseSensitive: false), 'tel:');
+    if (lower.startsWith('sms:') || lower.startsWith('smsto:')) return c;
+    if (lower.contains('@') && !lower.startsWith('begin:')) return 'mailto:$c';
+    return null;
+  }
+
+  // 타입별 아이콘 / 버튼 라벨
+  (IconData, String)? _smartAction() {
+    switch (result.type) {
+      case 'URL':
+        return (Icons.open_in_browser_rounded, AppStrings.openInBrowser);
+      case 'Email':
+        return (Icons.email_rounded, AppStrings.sendEmail);
+      case 'Phone':
+        return (Icons.phone_rounded, AppStrings.callNumber);
+      case 'SMS':
+        return (Icons.sms_rounded, AppStrings.sendSms);
+      default:
+        return null;
+    }
+  }
+
+  bool get _isUrl {
+    final lower = result.content.toLowerCase().trim();
+    return lower.startsWith('http://') || lower.startsWith('https://');
+  }
+
+  Future<void> _launch(BuildContext context, String uriStr) async {
+    final uri = Uri.tryParse(uriStr);
+    if (uri == null) return;
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(AppStrings.cannotOpen)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final smartAction = _smartAction();
+    final uri = _smartUri();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -46,16 +96,50 @@ class QrResultCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Text(
-            result.content,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  height: 1.5,
-                ),
-            maxLines: 6,
-            overflow: TextOverflow.ellipsis,
+
+          // URL이면 파란 링크처럼 표시하고 탭 가능하게
+          GestureDetector(
+            onTap: (uri != null) ? () => _launch(context, uri) : null,
+            child: Text(
+              result.content,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: _isUrl ? AppColors.secondary : AppColors.textPrimary,
+                    height: 1.5,
+                    decoration: _isUrl ? TextDecoration.underline : null,
+                    decorationColor: AppColors.secondary,
+                  ),
+              maxLines: 6,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(height: 16),
+
+          // 타입별 스마트 액션 버튼 (URL / Email / Phone / SMS)
+          if (smartAction != null && uri != null) ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _launch(context, uri),
+                icon: Icon(smartAction.$1, size: 18),
+                label: Text(smartAction.$2),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: AppColors.background,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Copy / Share
           Row(
             children: [
               _ActionChip(

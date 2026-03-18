@@ -42,9 +42,14 @@ class AppStrings {
   static const String open = 'Open';
   static const String save = 'Save';
   static const String delete = 'Delete';
+  static const String openInBrowser = 'Open in Browser';
+  static const String sendEmail = 'Send Email';
+  static const String callNumber = 'Call';
+  static const String sendSms = 'Send SMS';
 
   // Feedback
   static const String copiedToClipboard = 'Copied to clipboard';
+  static const String cannotOpen = 'Cannot open this link';
   static const String savedToHistory = 'Saved to history';
   static const String deleted = 'Deleted';
   static const String errorOccurred = 'An error occurred';
