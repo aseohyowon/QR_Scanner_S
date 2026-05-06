@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../domain/entities/scan_result.dart';
 import '../../core/utils/qr_type_detector.dart';
@@ -105,6 +106,41 @@ class QrScannerProvider extends ChangeNotifier {
         : CameraFacing.back;
     await _controller?.switchCamera();
     notifyListeners();
+  }
+
+  /// Android Photo Picker로 이미지를 선택해 QR 코드를 분석합니다.
+  /// 권한 요청 없이 시스템 Photo Picker UI를 사용합니다.
+  Future<String?> pickFromGallery() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery);
+    if (file == null) return null;
+
+    final result = await _controller?.analyzeImage(file.path);
+    if (result == null || result.barcodes.isEmpty) {
+      return 'no_qr'; // 인식 실패 시그널
+    }
+
+    final barcode = result.barcodes.first;
+    if (barcode.rawValue == null) return 'no_qr';
+
+    await HapticFeedback.mediumImpact();
+
+    final content = barcode.rawValue!;
+    final type = QrTypeDetector.detect(content);
+    final scanResult = ScanResult(
+      id: _uuid.v4(),
+      content: content,
+      type: type,
+      scannedAt: DateTime.now(),
+    );
+
+    _lastResult = scanResult;
+    _state = ScanState.result;
+    notifyListeners();
+
+    await _historyProvider.addResult(scanResult);
+    await _adProvider.incrementScanCount();
+    return null;
   }
 
   @override

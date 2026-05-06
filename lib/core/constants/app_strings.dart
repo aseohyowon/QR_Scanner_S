@@ -46,10 +46,12 @@ class AppStrings {
   static const String sendEmail = 'Send Email';
   static const String callNumber = 'Call';
   static const String sendSms = 'Send SMS';
+  static const String scanFromGallery = 'Scan from Gallery';
 
   // Feedback
   static const String copiedToClipboard = 'Copied to clipboard';
   static const String cannotOpen = 'Cannot open this link';
+  static const String noQrFound = 'No QR code found in image';
   static const String savedToHistory = 'Saved to history';
   static const String deleted = 'Deleted';
   static const String errorOccurred = 'An error occurred';

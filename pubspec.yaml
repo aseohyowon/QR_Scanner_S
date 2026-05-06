@@ -14,7 +14,7 @@ publish_to: 'none'
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+3
+version: 1.0.3+8
 
 environment:
   sdk: ^3.7.2
@@ -50,6 +50,9 @@ dependencies:
 
   # URL 열기
   url_launcher: ^6.3.1
+
+  # 갤러리에서 이미지 선택 (Android Photo Picker — 권한 불필요)
+  image_picker: ^1.1.2
 
   # Ads
   google_mobile_ads: ^5.2.0

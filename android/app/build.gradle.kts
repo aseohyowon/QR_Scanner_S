@@ -17,6 +17,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.qrscanner.qr_scanner_s"
     compileSdk = flutter.compileSdkVersion
+    // NDK 27+: 16KB 메모리 페이지 정렬 지원
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -43,6 +44,14 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    packaging {
+        jniLibs {
+            // 네이티브 라이브러리를 압축하지 않고 저장 → 16KB 페이지 정렬 보장
+            // Google Play 16KB 메모리 페이지 정책 (2025년 11월~) 준수
+            useLegacyPackaging = false
+        }
     }
 
     buildTypes {

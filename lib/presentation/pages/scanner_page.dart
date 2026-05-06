@@ -45,6 +45,19 @@ class _ScannerPageState extends State<ScannerPage>
     }
   }
 
+  Future<void> _pickFromGallery(
+      BuildContext context, QrScannerProvider provider) async {
+    final error = await provider.pickFromGallery();
+    if (error == 'no_qr' && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(AppStrings.noQrFound),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,6 +90,13 @@ class _ScannerPageState extends State<ScannerPage>
                       ? provider.flipCamera
                       : null,
                   tooltip: AppStrings.flipCamera,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.photo_library_rounded),
+                  onPressed: provider.state == ScanState.scanning
+                      ? () => _pickFromGallery(context, provider)
+                      : null,
+                  tooltip: AppStrings.scanFromGallery,
                 ),
               ],
             ),
